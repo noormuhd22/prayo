@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "Prayo — Prayer Times",
+  "short_name": "Prayo",
+  "description": "Prayer times, Qibla direction, daily duas, and a tasbih counter.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f3ec",
+  "theme_color": "#0d9488",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
