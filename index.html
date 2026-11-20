@@ -7,7 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Prayo">
+<script>try{if(localStorage.getItem('prayo:theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>Prayo – Prayer Times</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Inter:wght@400;500;600;700&display=swap">
@@ -99,7 +101,7 @@ select{margin-top:8px}
 .tgt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}.tgt label{font-size:13px;color:var(--muted);font-weight:600}.tgt input{width:68px;padding:9px 6px;text-align:center}.tgt .chip{padding:8px 12px}
 .counter-actions{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px}.counter-actions .tap{margin:0}.undo{width:38px;height:38px;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--solid);color:var(--muted);display:grid;place-items:center;cursor:pointer}.undo:disabled{opacity:.4;cursor:default}.undo:not(:disabled):active{transform:scale(.94)}
 .bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .2s}
-.modal-backdrop{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center;padding:16px}.modal-backdrop.open{display:flex}.modal{width:min(520px,100%);max-height:85vh;overflow:auto;padding:18px}.modal h2{margin:0 0 14px;font-size:18px}.setting{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.setting:last-child{border-bottom:0}.setting label{font-size:14px;font-weight:600}.setting small{display:block;color:var(--muted);font-size:11.5px;font-weight:500;margin-top:2px}.setting select,.setting input[type="number"]{width:150px;margin:0}.setting input[type="checkbox"]{width:20px;height:20px;accent-color:var(--accent)}
+.modal-backdrop{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center;padding:16px}.modal-backdrop.open{display:flex}.modal{width:min(520px,100%);max-height:85vh;overflow:auto;padding:18px}.modal h2{margin:0 0 14px;font-size:18px}.setting{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.setting:last-child{border-bottom:0}.setting label{font-size:14px;font-weight:600}.setting small{display:block;color:var(--muted);font-size:11.5px;font-weight:500;margin-top:2px}.setting select,.setting input[type="number"]{width:150px;margin:0}.setting input[type="checkbox"]{width:20px;height:20px;accent-color:var(--accent)}.setting .btn{width:150px;padding:10px;font-size:13px}
 @media (hover:hover){.btn:hover{filter:brightness(1.07)}.iconbtn:hover{border-color:var(--accent)}.row:not(.on):hover{background:var(--accent-bg)}}
 @media (max-width:899px){main{max-width:520px}}
 @media (max-width:380px){.fields{grid-template-columns:1fr}.word{font-size:30px}.hero{padding:18px 12px}}
@@ -150,7 +152,9 @@ header{margin-bottom:28px}
       <div class="setting"><label for="calcMethod">Calculation method<small>Used for newly loaded times</small></label><select id="calcMethod"><option value="1">University of Islamic Sciences</option><option value="2">ISNA</option><option value="3">MWL</option><option value="4">Umm al-Qura</option><option value="5">Egyptian</option><option value="12">Gulf Region</option><option value="13">Turkey</option><option value="14">Russia</option><option value="16">Dubai</option></select></div>
       <div class="setting"><label for="asrMethod">Asr method</label><select id="asrMethod"><option value="0">Shafi / Standard</option><option value="1">Hanafi</option></select></div>
       <div class="setting"><label for="reminderOffset">Reminder before prayer</label><select id="reminderOffset"><option value="0">At prayer time</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option></select></div>
-      <div class="setting"><label for="adhanEnabled">Adhan sound<small>Uses a built-in chime while Prayo is open</small></label><input id="adhanEnabled" type="checkbox"></div>
+      <div class="setting"><label for="adhanEnabled">Reminder sound<small>Play a built-in chime when Prayo is open</small></label><input id="adhanEnabled" type="checkbox"></div>
+      <div class="setting"><label for="testSound">Test reminder sound<small>Notification sound is controlled by your device</small></label><button class="btn ghost" id="testSound" type="button" onclick="chime()">Play sound</button></div>
+      <p class="qt">Allow notifications in your browser and device settings to receive system alerts. Prayer reminders run while Prayo is open.</p>
       <div class="setting"><label for="manualOffset">Manual prayer adjustment<small>Minutes applied to every prayer</small></label><input id="manualOffset" type="number" min="-60" max="60" value="0"></div>
       <div class="setting"><label for="hijriOffset">Hijri day adjustment</label><input id="hijriOffset" type="number" min="-2" max="2" value="0"></div>
       <button class="btn primary" style="margin-top:14px" onclick="saveSettings()">Save settings</button>
@@ -188,10 +192,10 @@ function tahajjudHTML(){
 }
 function hij(d){const p=new Intl.DateTimeFormat('en-u-ca-islamic-umalqura',{day:'numeric',month:'numeric',year:'numeric'}).formatToParts(d),g=k=>+p.find(x=>x.type===k).value;return{d:g('day'),m:g('month')}}
 function datesHTML(){try{const ev=[['Islamic New Year',1,1],['Ramadan begins',9,1],['Eid al-Fitr',10,1],['Day of Arafah',12,9],['Eid al-Adha',12,10]],res=[],base=new Date();base.setHours(12,0,0,0);for(let i=0;i<=400;i++){const x=new Date(base.getTime()+i*864e5),h=hij(x);ev.forEach((e,j)=>{if(!res[j]&&h.m===e[1]&&h.d===e[2])res[j]={n:e[0],i,x}})}const rows=res.filter(Boolean).sort((a,b)=>a.i-b.i).map(r=>`<div class='ev'><span>${r.n}<small>${r.x.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</small></span><b>${r.i===0?'Today':r.i===1?'Tomorrow':'in '+r.i+' days'}</b></div>`).join('');return `<section class='glass card o8'><h3>Upcoming Islamic dates</h3>${rows}<p class='qt' style='margin-top:10px'>Based on the Umm al-Qura calendar. Local moon sighting may differ by a day.</p></section>`}catch(e){return ''}}
-let rem=!!ls('prayo:rem'),fired='';
+let rem=!!ls('prayo:rem'),fired='',audioContext=null;
 function remDraw(){const b=$('rb');if(b){b.textContent=rem?'Reminders on':'Remind me';b.classList.toggle('on',rem)}}
-function chime(){try{const a=new (window.AudioContext||window.webkitAudioContext)(),t=a.currentTime;[523,659,784].forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.frequency.value=f;o.connect(g);g.connect(a.destination);g.gain.setValueAtTime(.0001,t+i*.25);g.gain.exponentialRampToValueAtTime(.15,t+i*.25+.05);g.gain.exponentialRampToValueAtTime(.0001,t+i*.25+.6);o.start(t+i*.25);o.stop(t+i*.25+.7)})}catch(e){}}
-async function remToggle(){rem=!rem;if(rem){try{if('Notification' in window&&Notification.permission==='default')await Notification.requestPermission()}catch(e){}chime();toast('You’ll be reminded at prayer times while this page is open.')}ls('prayo:rem',rem);remDraw()}
+async function chime(){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw new Error('Audio playback is not supported');if(!audioContext)audioContext=new Audio();if(audioContext.state==='suspended')await audioContext.resume();const t=audioContext.currentTime;[523,659,784].forEach((f,i)=>{const o=audioContext.createOscillator(),g=audioContext.createGain();o.frequency.value=f;o.connect(g);g.connect(audioContext.destination);g.gain.setValueAtTime(.0001,t+i*.25);g.gain.exponentialRampToValueAtTime(.15,t+i*.25+.05);g.gain.exponentialRampToValueAtTime(.0001,t+i*.25+.6);o.start(t+i*.25);o.stop(t+i*.25+.7)})}catch(e){toast('Couldn’t play reminder sound. Check your device sound settings.')}}
+async function remToggle(){let denied='Notification' in window&&Notification.permission==='denied';if(!rem&&'Notification' in window&&Notification.permission==='default'){try{denied=await Notification.requestPermission()==='denied'}catch(e){denied=true}}rem=!rem;ls('prayo:rem',rem);remDraw();toast(rem?(denied?'Notifications are blocked. Allow them in browser settings; sound works while Prayo is open.':'You’ll be reminded while Prayo is open.'):'Prayer reminders are off.')}
 function shareT(){const t=st.times,txt='Prayer times · '+st.label+'\n'+ORDER.map(p=>p+': '+fmt(t[p])).join('\n')+'\nvia Prayo';if(navigator.share){navigator.share({text:txt}).catch(()=>{})}else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>toast('Copied to clipboard'),()=>toast('Couldn’t copy'))}else toast('Sharing isn’t available here')}
 const DH=[['SubhanAllah','سبحان الله',33],['Alhamdulillah','الحمد لله',33],['Allahu Akbar','الله أكبر',34],['Astaghfirullah','أستغفر الله',100]];
 const P5=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
@@ -221,7 +225,7 @@ function saveSettings(){const p={method:$('calcMethod').value,asr:$('asrMethod')
 function fmt(t){const[h,m]=t.split(":").map(Number);const ap=h>=12?"PM":"AM";return `${h%12||12}:${String(m).padStart(2,"0")} ${ap}`}
 function secs(t){const[h,m]=t.split(":").map(Number);return h*3600+m*60}
 function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),3600)}
-function toggleTheme(){const r=document.documentElement;const dark=r.getAttribute("data-theme")==="dark";r.setAttribute("data-theme",dark?"light":"dark")}
+function toggleTheme(){const r=document.documentElement;const dark=r.getAttribute("data-theme")==="dark";const theme=dark?'light':'dark';r.setAttribute('data-theme',theme);try{localStorage.setItem('prayo:theme',theme)}catch(e){toast('Theme change won’t be saved after refresh.')}}
 function clean(t){return t.split(" ")[0]}
 
 let installPrompt=null;
