@@ -1,5 +1,5 @@
-const CACHE = 'prayo-shell-v1';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+const CACHE = 'prayo-shell-v2';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './prayo-logo.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
