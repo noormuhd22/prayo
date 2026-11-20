@@ -14,7 +14,6 @@
 <style>
 :root{--bg:#f6f3ec;--card:rgba(255,255,255,.72);--solid:#fff;--text:#14231e;--muted:#6a7b74;--accent:#0d9488;--accent2:#d4a017;--accent-bg:rgba(13,148,136,.12);--line:rgba(20,35,30,.09);--shadow:0 10px 40px rgba(20,60,50,.12);--blob1:#99f6e4;--blob2:#fde68a;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1315;--card:rgba(24,38,41,.7);--solid:#182629;--text:#eaf3f0;--muted:#8fa49d;--accent:#2dd4bf;--accent2:#fbbf24;--accent-bg:rgba(45,212,191,.14);--line:rgba(255,255,255,.08);--shadow:0 10px 40px rgba(0,0,0,.4);--blob1:#0f766e;--blob2:#78350f;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0b1315;--card:rgba(24,38,41,.7);--solid:#182629;--text:#eaf3f0;--muted:#8fa49d;--accent:#2dd4bf;--accent2:#fbbf24;--accent-bg:rgba(45,212,191,.14);--line:rgba(255,255,255,.08);--shadow:0 10px 40px rgba(0,0,0,.4);--blob1:#0f766e;--blob2:#78350f;color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
@@ -222,7 +221,7 @@ function saveSettings(){const p={method:$('calcMethod').value,asr:$('asrMethod')
 function fmt(t){const[h,m]=t.split(":").map(Number);const ap=h>=12?"PM":"AM";return `${h%12||12}:${String(m).padStart(2,"0")} ${ap}`}
 function secs(t){const[h,m]=t.split(":").map(Number);return h*3600+m*60}
 function toast(msg){const e=document.getElementById("toast");e.textContent=msg;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),3600)}
-function toggleTheme(){const r=document.documentElement;const dark=getComputedStyle(r).colorScheme==="dark";r.setAttribute("data-theme",dark?"light":"dark")}
+function toggleTheme(){const r=document.documentElement;const dark=r.getAttribute("data-theme")==="dark";r.setAttribute("data-theme",dark?"light":"dark")}
 function clean(t){return t.split(" ")[0]}
 
 let installPrompt=null;
