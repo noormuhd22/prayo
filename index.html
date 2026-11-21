@@ -33,6 +33,7 @@ header{display:flex;align-items:center;justify-content:space-between;margin-bott
 .glass{background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .search{padding:14px;margin-bottom:16px;position:relative;z-index:4}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.country-field{position:relative;z-index:6}
 input,select{width:100%;padding:12px 14px;font:500 16px Inter,system-ui,sans-serif;border-radius:12px;border:1px solid var(--line);background:var(--solid);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
 input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
 select{margin-top:8px}
@@ -68,7 +69,8 @@ select{margin-top:8px}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .sk{height:300px;display:grid;place-items:center;color:var(--muted);font-size:14px}
 .place-results{position:absolute;top:calc(100% - 8px);left:14px;right:14px;max-height:280px;overflow:auto;padding:6px;background:var(--solid);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:5}
-.place-results[hidden]{display:none}
+.country-results{position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:240px;overflow:auto;padding:6px;background:var(--solid);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:7}
+.place-results[hidden],.country-results[hidden]{display:none}
 .place-option{width:100%;padding:11px 12px;border:0;border-radius:10px;background:transparent;color:var(--text);text-align:left;font:500 14px Inter,system-ui,sans-serif;cursor:pointer}
 .place-option:hover,.place-option:focus-visible{background:var(--accent-bg)}
 .place-option small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
@@ -84,7 +86,7 @@ select{margin-top:8px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .chip{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--solid);color:var(--text);font:600 14px Inter,system-ui,sans-serif;cursor:pointer;transition:all .2s}
 .chip.on{background:linear-gradient(135deg,var(--accent),#10b981);color:#04201c;border-color:transparent}
-.qt{font-size:13.5px;color:var(--muted);margin:0;line-height:1.5}.qt b{color:var(--text)}
+.qt{font-size:13.5px;color:var(--muted);margin:0;line-height:1.5}.qt b{color:var(--text)}.qt a{color:var(--accent)}
 .faq{margin-top:16px}
 .faq h2{margin:0 0 12px;font-size:20px}
 .faq details+details{border-top:1px solid var(--line)}
@@ -141,8 +143,11 @@ header{margin-bottom:28px}
 
   <section class="glass search">
     <div class="fields">
-      <input id="city" placeholder="City" value="Kochi" autocomplete="off">
-      <input id="country" placeholder="Country" value="India" autocomplete="off">
+      <input id="city" placeholder="City" value="Kochi" autocomplete="off" aria-label="City">
+      <div class="country-field">
+        <input id="country" placeholder="Country" autocomplete="off" aria-label="Country" aria-autocomplete="list" aria-controls="countryResults" aria-expanded="false">
+        <div id="countryResults" class="country-results" role="listbox" aria-label="Matching countries" hidden></div>
+      </div>
     </div>
     <div class="btns">
       <button class="btn primary" onclick="byCity()">Search city</button>
@@ -209,7 +214,11 @@ Isha:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>'};
 const C=2*Math.PI*96;
 let st=null,timer=null;
 const $=id=>document.getElementById(id);
-let selectedPlace=null,placeRequest=0,placeTimer=null;
+let selectedPlace=null,selectedCountryCode='IN',placeRequest=0,placeTimer=null;
+const COUNTRY_CODES='AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW'.split(' ');
+const countryNames=new Intl.DisplayNames(['en'],{type:'region'});
+const COUNTRIES=COUNTRY_CODES.map(code=>({code,name:countryNames.of(code)})).sort((a,b)=>a.name.localeCompare(b.name));
+function populateCountries(){$('country').value=COUNTRIES.find(country=>country.code==='IN').name}
 const DU=[['رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ','Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire.','Qur’an 2:201'],['حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ','Allah is sufficient for us, and He is the best disposer of affairs.','Qur’an 3:173'],['رَبِّ زِدْنِي عِلْمًا','My Lord, increase me in knowledge.','Qur’an 20:114'],['رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي','My Lord, expand my chest and ease my task for me.','Qur’an 20:25–26'],['لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ','There is no power and no strength except with Allah.','Bukhari and Muslim'],['سُبْحَانَ اللَّهِ وَبِحَمْدِهِ سُبْحَانَ اللَّهِ الْعَظِيمِ','Glory be to Allah and praise Him; glory be to Allah the Magnificent.','Bukhari and Muslim'],['اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ','O Allah, help me to remember You, to thank You, and to worship You well.','Abu Dawud'],['رَبَّنَا لَا تُؤَاخِذْنَا إِنْ نَسِينَا أَوْ أَخْطَأْنَا','Our Lord, do not hold us accountable if we forget or make a mistake.','Qur’an 2:286']];
 let duI=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5)%DU.length;
 const TR=['Rabbana ātinā fī d-dunya hasanatan wa fī l-ākhirati hasanatan wa qinā ‘adhāba n-nār','Hasbunāllāhu wa ni‘ma l-wakīl','Rabbi zidnī ‘ilmā','Rabbi shrah lī sadrī wa yassir lī amrī','Lā hawla wa lā quwwata illā billāh','Subhāna llāhi wa bihamdihī, Subhāna llāhi l-‘Azīm','Allāhumma a‘innī ‘alā dhikrika wa shukrika wa husni ‘ibādatik','Rabbanā lā tu’ākhidhnā in nasīnā aw akhta’nā'];
@@ -239,12 +248,12 @@ function tg(){return tas.t||DH[tas.i][2]}
 function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
 function dk(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function qibla(){const m=st.meta,r=Math.PI/180,k=21.4225*r,l=39.8262*r,p=m.lat*r,dl=l-m.lon*r;const b=(Math.atan2(Math.sin(dl)*Math.cos(k),Math.cos(p)*Math.sin(k)-Math.sin(p)*Math.cos(k)*Math.cos(dl))/r+360)%360;const a=Math.sin((k-p)/2)**2+Math.cos(p)*Math.cos(k)*Math.sin(dl/2)**2;return{b,km:Math.round(12742*Math.asin(Math.sqrt(a)))}}
-function qiblaHTML(){const q=qibla(),dir=['N','NE','E','SE','S','SW','W','NW'][Math.round(q.b/45)%8];return `<section class='glass card o5'><h3>Qibla direction</h3><div class='compass'><svg viewBox='-100 -100 200 200'><g id='dial'><circle r='92' class='track' style='stroke-width:3'/><text y='-74' text-anchor='middle' class='ct'>N</text><text y='84' text-anchor='middle' class='ct'>S</text><text x='80' y='4' text-anchor='middle' class='ct'>E</text><text x='-80' y='4' text-anchor='middle' class='ct'>W</text><g transform='rotate(${q.b})'><path d='M0,-66 L10,-40 L-10,-40Z' style='fill:var(--accent2)'/><line x1='0' y1='-40' x2='0' y2='0' style='stroke:var(--accent2);stroke-width:4;stroke-linecap:round'/><rect x='-8' y='-92' width='16' height='16' rx='3' style='fill:var(--text)'/></g></g><circle r='5' style='fill:var(--text)'/></svg></div><p class='qt' style='text-align:center;margin-bottom:12px'><b>${Math.round(q.b)}° ${dir}</b> from North · ${q.km.toLocaleString()} km to Makkah</p><button class='btn ghost' onclick='liveCompass()'>Use live compass</button></section>`}
+function qiblaHTML(){const q=qibla(),dir=['N','NE','E','SE','S','SW','W','NW'][Math.round(q.b/45)%8];return `<section class='glass card o4'><h3>Qibla direction</h3><div class='compass'><svg viewBox='-100 -100 200 200'><g id='dial'><circle r='92' class='track' style='stroke-width:3'/><text y='-74' text-anchor='middle' class='ct'>N</text><text y='84' text-anchor='middle' class='ct'>S</text><text x='80' y='4' text-anchor='middle' class='ct'>E</text><text x='-80' y='4' text-anchor='middle' class='ct'>W</text><g transform='rotate(${q.b})'><path d='M0,-66 L10,-40 L-10,-40Z' style='fill:var(--accent2)'/><line x1='0' y1='-40' x2='0' y2='0' style='stroke:var(--accent2);stroke-width:4;stroke-linecap:round'/><rect x='-8' y='-92' width='16' height='16' rx='3' style='fill:var(--text)'/></g></g><circle r='5' style='fill:var(--text)'/></svg></div><p class='qt' style='text-align:center;margin-bottom:12px'><b>${Math.round(q.b)}° ${dir}</b> from North · ${q.km.toLocaleString()} km to Makkah</p><button class='btn ghost' onclick='liveCompass()'>Use live compass</button></section>`}
 async function liveCompass(){try{if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){toast('Compass permission was denied');return}}let got=false;const h=e=>{const hd=e.webkitCompassHeading!=null?e.webkitCompassHeading:(e.alpha!=null&&e.absolute!==false?360-e.alpha:null);if(hd==null)return;got=true;$('dial').style.transform=`rotate(${-hd}deg)`};window.addEventListener('deviceorientationabsolute',h,true);window.addEventListener('deviceorientation',h,true);toast('Hold your phone flat. When the gold arrow points up, you are facing the Qibla.');setTimeout(()=>{if(!got)toast('Live compass isn’t available on this device')},2500)}catch(e){toast('Live compass isn’t available here')}}
 function fastHTML(){const t=st.times,d=new Date().getDay(),h=+st.meta.hday||0,g=[];if(d===1||d===4)g.push('Today is a Monday or Thursday, days the Prophet ﷺ often fasted.');if(h>=13&&h<=15)g.push('These are the White Days (13th–15th of the Hijri month), recommended for fasting.');return `<section class='glass card o4'><h3>Fasting</h3><div class='tiles'><div class='tile'><small>Suhoor ends</small><b>${fmt(t.Fajr)}</b></div><div class='tile'><small>Iftar</small><b>${fmt(t.Maghrib)}</b></div></div><p class='qt'>${g.length?g.join(' '):'Suhoor ends at Fajr and the fast is broken at Maghrib.'} Hijri dates can differ by a day with moon sighting.</p></section>`}
 function trkHTML(){return `<section class='glass card o3'><div class='th'><h3>Today’s prayers</h3><span id='ts'></span></div><div class='chips' id='pt'>${P5.map(p=>`<button class='chip' data-p='${p}'>${p}</button>`).join('')}</div><p class='qt' id='tk'></p></section>`}
 function trkDraw(){const log=ls('prayo:log')||{},today=new Date(),todayKey=dk(today),t=log[todayKey]||[];document.querySelectorAll('#pt .chip').forEach(b=>b.classList.toggle('on',t.includes(b.dataset.p)));$('ts').textContent=t.length+'/5';let s=0,d=new Date(today);if((log[todayKey]||[]).length<5)d.setDate(d.getDate()-1);while((log[dk(d)]||[]).length>=5){s++;d.setDate(d.getDate()-1)}$('tk').textContent=s?`${s}-day streak. May Allah accept your prayers.`:'Tap each prayer after you pray to build your streak.'}
-function tasHTML(){return `<section class='glass card o6'><h3>Tasbih</h3><div class='chips' id='dh'>${DH.map((d,i)=>`<button class='chip' data-i='${i}'>${d[0]}</button>`).join('')}</div><div class='ta' id='tar'></div><div class='tgt' id='tp'><label for='tt'>Target</label><input id='tt' type='number' min='1' max='99999' inputmode='numeric'><button class='chip' data-t='33'>33</button><button class='chip' data-t='99'>99</button><button class='chip' data-t='100'>100</button><button class='chip' data-t='500'>500</button></div><div class='counter-actions'><button class='undo' id='undo' type='button' aria-label='Undo last count' title='Undo last count' onclick='tasUndo()' disabled><svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 7v6h6'/><path d='M5.6 13A8 8 0 1 0 7 7.3L3 13'/></svg></button><button class='tap' id='tap' aria-label='Count'><b id='tc'>0</b><small id='tg'></small></button></div><div class='bar'><i id='tb'></i></div><button class='btn ghost' onclick='tasReset()'>Reset</button></section>`}
+function tasHTML(){return `<section class='glass card o4'><h3>Tasbih</h3><div class='chips' id='dh'>${DH.map((d,i)=>`<button class='chip' data-i='${i}'>${d[0]}</button>`).join('')}</div><div class='ta' id='tar'></div><div class='tgt' id='tp'><label for='tt'>Target</label><input id='tt' type='number' min='1' max='99999' inputmode='numeric'><button class='chip' data-t='33'>33</button><button class='chip' data-t='99'>99</button><button class='chip' data-t='100'>100</button><button class='chip' data-t='500'>500</button></div><div class='counter-actions'><button class='undo' id='undo' type='button' aria-label='Undo last count' title='Undo last count' onclick='tasUndo()' disabled><svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 7v6h6'/><path d='M5.6 13A8 8 0 1 0 7 7.3L3 13'/></svg></button><button class='tap' id='tap' aria-label='Count'><b id='tc'>0</b><small id='tg'></small></button></div><div class='bar'><i id='tb'></i></div><button class='btn ghost' onclick='tasReset()'>Reset</button></section>`}
 function tasDraw(){const d=DH[tas.i];$('tar').textContent=d[1];$('tc').textContent=tas.c;$('tg').textContent='of '+tg();$('tb').style.width=Math.min(100,tas.c/tg()*100)+'%';$('undo').disabled=tas.c===0;if(document.activeElement!==$('tt'))$('tt').value=tg();document.querySelectorAll('#tp .chip').forEach(b=>b.classList.toggle('on',+b.dataset.t===tg()));document.querySelectorAll('#dh .chip').forEach((b,i)=>b.classList.toggle('on',i===tas.i))}
 function tasTap(){tas.c++;const g=tg();if(navigator.vibrate)navigator.vibrate(tas.c%g===0?[60,40,60]:12);if(tas.c===g)toast('Target reached. Keep going or reset.');ls('prayo:tas',tas);tasDraw()}
 function tasUndo(){if(tas.c<=0)return;tas.c--;ls('prayo:tas',tas);tasDraw()}
@@ -349,6 +358,24 @@ async function load(url,label,coords){
 }
 function placeLabel(place){return [place.name,place.admin1,place.country].filter((value,index,array)=>value&&array.indexOf(value)===index).join(', ')}
 function hidePlaces(){const list=$('places');list.hidden=true;list.replaceChildren()}
+function hideCountries(){const list=$('countryResults');list.hidden=true;list.replaceChildren();$('country').setAttribute('aria-expanded','false')}
+function showCountries(query){
+  const list=$('countryResults');list.replaceChildren();
+  if(query.length<3){hideCountries();return}
+  const normalizedQuery=query.toLowerCase();
+  const matches=COUNTRIES.filter(country=>country.name.toLowerCase().includes(normalizedQuery)).sort((a,b)=>Number(b.name.toLowerCase().startsWith(normalizedQuery))-Number(a.name.toLowerCase().startsWith(normalizedQuery))||a.name.localeCompare(b.name)).slice(0,20);
+  if(!matches.length){const empty=document.createElement('div');empty.className='place-option';empty.textContent='No matching countries found.';list.append(empty)}
+  matches.forEach(country=>{
+    const button=document.createElement('button');button.type='button';button.className='place-option';button.setAttribute('role','option');button.textContent=country.name;
+    button.addEventListener('click',()=>selectCountry(country));list.append(button);
+  });
+  list.hidden=false;$('country').setAttribute('aria-expanded','true');
+}
+function selectCountry(country){
+  selectedCountryCode=country.code;$('country').value=country.name;selectedPlace=null;hideCountries();hidePlaces();
+  placeRequest++;clearTimeout(placeTimer);
+  if($('city').value.trim().length>=2)searchPlaces();
+}
 function showPlaces(places){
   const list=$('places');list.replaceChildren();
   if(!places.length){const empty=document.createElement('div');empty.className='place-option';empty.textContent='No matching cities found. Check the city and country.';list.append(empty);list.hidden=false;return}
@@ -361,39 +388,45 @@ function showPlaces(places){
   list.hidden=false;
 }
 async function searchPlaces(){
-  const city=$('city').value.trim(),country=$('country').value.trim(),request=++placeRequest;
+  const city=$('city').value.trim(),countryCode=selectedCountryCode,request=++placeRequest;
   selectedPlace=null;
+  if($('country').value.trim()&&!countryCode){hidePlaces();return}
   if(city.length<2){hidePlaces();return}
   const list=$('places');list.replaceChildren();const loading=document.createElement('div');loading.className='place-option';loading.textContent='Searching cities…';list.append(loading);list.hidden=false;
   try{
-    const response=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=100&language=en&format=json`);
+    const countryParam=countryCode?`&countryCode=${encodeURIComponent(countryCode)}`:'';
+    const response=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=100&language=en&format=json${countryParam}`);
     if(!response.ok)throw new Error('City search service request failed');
     const data=await response.json();
     if(request!==placeRequest)return;
-    let places=(data.results||[]).filter(place=>!country||(place.country||'').toLowerCase().includes(country.toLowerCase()));
+    let places=(data.results||[]).filter(place=>!countryCode||place.country_code===countryCode);
     places.sort((a,b)=>Number(b.name.toLowerCase()===city.toLowerCase())-Number(a.name.toLowerCase()===city.toLowerCase()));
     showPlaces(places);
   }catch(e){if(request===placeRequest){hidePlaces();toast('Couldn’t search for cities. Check your connection and try again.')}}
 }
 async function choosePlace(place){
-  selectedPlace=place;$('city').value=place.name;$('country').value=place.country||'';
-  hidePlaces();
+  selectedPlace=place;$('city').value=place.name;
+  const country=COUNTRIES.find(item=>item.code===place.country_code);selectedCountryCode=country?country.code:'';
+  $('country').value=country?country.name:'';
+  hidePlaces();hideCountries();
   const p=prefs(),label=placeLabel(place),date=dateForZone(place.timezone||'UTC');
   const url=`https://api.aladhan.com/v1/timings/${date}?latitude=${encodeURIComponent(place.latitude)}&longitude=${encodeURIComponent(place.longitude)}&method=${p.method}&school=${p.asr}`;
   if(!await load(url,label,{latitude:place.latitude,longitude:place.longitude}))toast('Couldn’t load prayer times for this location. Please try again.');
 }
 async function byCity(){
-  const city=$('city').value.trim(),country=$('country').value.trim();
-  if(!city||!country){toast('Please enter a city and country');return}
-  if(selectedPlace&&selectedPlace.name===city&&selectedPlace.country===country){await choosePlace(selectedPlace);return}
+  const city=$('city').value.trim(),countryCode=selectedCountryCode;
+  if(!city){toast('Please enter a city');return}
+  if($('country').value.trim()&&!countryCode){toast('Choose a country from the list or clear the country field');return}
+  if(selectedPlace&&selectedPlace.name===city&&(!countryCode||selectedPlace.country_code===countryCode)){await choosePlace(selectedPlace);return}
   await searchPlaces();
 }
 async function initCity(){
-  const city=$('city').value.trim(),country=$('country').value.trim();
+  const city=$('city').value.trim(),countryCode=selectedCountryCode;
   try{
-    const response=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=100&language=en&format=json`);
+    const countryParam=countryCode?`&countryCode=${encodeURIComponent(countryCode)}`:'';
+    const response=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=100&language=en&format=json${countryParam}`);
     if(!response.ok)throw new Error('City search service request failed');
-    const data=await response.json(),place=(data.results||[]).find(result=>result.name.toLowerCase()===city.toLowerCase()&&result.country.toLowerCase()===country.toLowerCase());
+    const data=await response.json(),place=(data.results||[]).find(result=>result.name.toLowerCase()===city.toLowerCase()&&(!countryCode||result.country_code===countryCode));
     if(place)await choosePlace(place);else await searchPlaces();
   }catch(e){document.getElementById('out').innerHTML='<div class="glass sk">Search for a city to see local prayer times.</div>'}
 }
@@ -419,9 +452,11 @@ function byGeo(){
   },()=>{toast("Couldn’t get your location. Allow access, or search by city.")},{timeout:10000});
 }
 $('city').addEventListener('input',()=>{selectedPlace=null;placeRequest++;clearTimeout(placeTimer);placeTimer=setTimeout(searchPlaces,300)});
-$('country').addEventListener('input',()=>{selectedPlace=null;placeRequest++;clearTimeout(placeTimer);placeTimer=setTimeout(searchPlaces,300)});
-[$('city'),$('country')].forEach(input=>input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();byCity()}}));
-document.addEventListener('keydown',event=>{if(event.key==='Escape')hidePlaces()});
+$('country').addEventListener('input',event=>{selectedCountryCode='';selectedPlace=null;placeRequest++;clearTimeout(placeTimer);hidePlaces();showCountries(event.target.value.trim());if(!event.target.value.trim())placeTimer=setTimeout(searchPlaces,0)});
+$('country').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();const exact=COUNTRIES.find(country=>country.name.toLowerCase()===event.target.value.trim().toLowerCase());if(exact)selectCountry(exact);else if(selectedCountryCode)byCity()}});
+$('city').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();byCity()}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){hidePlaces();hideCountries()}});
+populateCountries();
 initCity();
 </script>
 </body>
